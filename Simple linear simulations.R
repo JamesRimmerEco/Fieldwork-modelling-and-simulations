@@ -71,6 +71,34 @@ twogroup_fun(sigma=1) # Example of how to change an element of the function
 
 sims <- replicate(1e3, twogroup_fun(), simplify = F)
 
+#####
+library(broom)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+#####
+tidy(growthfit) # Model coefficients from the single run
+summary(growthfit)$sigma # Standard deviation only (doesn't need broom)
+sims %>% # The simulations
+  map_df(tidy) %>% # Turns each sim object into a tibble
+  filter(term == "groupgroup2") %>% # Filtering for group2 
+  ggplot( aes(estimate) ) +
+  geom_density(fill = "blue", alpha = .5) + # Density plot for the estimates for group 2
+  geom_vline( xintercept = -2) # Puts a line for where the actual difference between group1 and group2 was
+# specified
+
+# When looking at this distribution, we generally lie close to the true value but there is some uncertainty
+# here; a small number even gave positive estimates. 
+
+
+
+
+
+
+
+
+
+
 
 
 
