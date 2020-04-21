@@ -32,6 +32,8 @@ summary(m1) # Can see the model predicts they are strongly related, with an esti
 abline(m1$coef[1], m1$coef[2], col = "red")
 
 ##### Next, need simulate with different groups
+# Source: https://aosmith.rbind.io/2018/01/09/simulate-simulate-part1/
+
 set.seed(16)
 ngroup <- 2
 nrep <- 10
@@ -87,16 +89,28 @@ sims %>% # The simulations
   geom_vline( xintercept = -2) # Puts a line for where the actual difference between group1 and group2 was
 # specified
 
-# When looking at this distribution, we generally lie close to the true value but there is some uncertainty
-# here; a small number even gave positive estimates. 
+# When looking at this distribution, estimates generally lie close to the true value but there is some 
+# uncertainty here; a small number even gave positive estimates. 
+
+# Now let's do the same for for standard deviation (sigma)
+sims %>% # The simulations
+  map_dbl(~summary(.x)$sigma) %>% 
+  data.frame(sigma=.) %>% 
+  ggplot( aes(sigma) ) +
+    geom_density(fill = "blue", alpha = .5) + 
+    geom_vline( xintercept = 2)
+
+# Again, not far off
+
+sims %>%
+  map_dbl(~summary(.x)$sigma) %>%
+  {. < 2} %>%
+  mean()
+
+# The standard deviation is underestimated a little over half the time. 
 
 
-
-
-
-
-
-
+### Can I now use this framework to sam
 
 
 
