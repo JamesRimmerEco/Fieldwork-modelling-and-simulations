@@ -120,11 +120,11 @@ b1 <- 0.2
 b2 <- rnorm(nrep, -10, 2) # Could set as distribution?
 
 chlor <- b0 + b1*nutrients + b2*(glyphosate == "Glyphosate") + eps 
-
 chlorophyll <- data.frame(chlor, nutrients, glyphosate) # Dataframe of prediction and predictor
+plot(chlorophyll)
+
 m3 <- lm(chlor ~ nutrients + glyphosate, data = chlorophyll)
 summary(m3)
 
-plot(chlorophyll)
 
        
