@@ -98,4 +98,27 @@ summary(m2) # Model outputs for the intercept and nutrients are very good
 plot(chlor ~ nutrients, data = chlorophyll) # Plot the raw data
 abline(m2$coef[1], m2$coef[2], col = "red") # Plot the model line
 
+#### Adding an extra predictor
+set.seed(20)
+sd <- 2
+eps <- rnorm(nrep, 0, sd)
+
+nstress <- 2
+nrep <- 45
+
+glyphosate <- rep( c("NoGlyphosate", "Glyphosate"), each = nrep)
+nutrients <- runif(nrep, 0, 100)
+
+b0 <- 2
+b1 <- 0.2
+b2 <- -10 # Could set as distribution?
+
+chlor <- b0 + b1*nutrients + b2*(glyphosate == "Glyphosate") + eps 
+
+chlorophyll <- data.frame(chlor, nutrients, glyphosate) # Dataframe of prediction and predictor
+m3 <- lm(chlor ~ nutrients + glyphosate, data = chlorophyll)
+summary(m3)
+
+plot(chlorophyll)
+
        
