@@ -98,20 +98,26 @@ summary(m2) # Model outputs for the intercept and nutrients are very good
 plot(chlor ~ nutrients, data = chlorophyll) # Plot the raw data
 abline(m2$coef[1], m2$coef[2], col = "red") # Plot the model line
 
-#### Adding an extra predictor
+
+                ################################################################################
+                ####        Model with both a continuous and a categorical predictor        ####
+                ################################################################################
+
+
 set.seed(20)
+
 sd <- 2
-eps <- rnorm(nrep, 0, sd)
 
 nstress <- 2
 nrep <- 45
 
+eps <- rnorm(nrep, 0, sd)
 glyphosate <- rep( c("NoGlyphosate", "Glyphosate"), each = nrep)
 nutrients <- runif(nrep, 0, 100)
 
 b0 <- 2
 b1 <- 0.2
-b2 <- -10 # Could set as distribution?
+b2 <- rnorm(nrep, -10, 2) # Could set as distribution?
 
 chlor <- b0 + b1*nutrients + b2*(glyphosate == "Glyphosate") + eps 
 
