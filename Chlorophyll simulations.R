@@ -81,4 +81,21 @@ simulations %>% # The simulations
   geom_density(fill = "blue", alpha = .5) + # Density plot for the estimates for group 2
   geom_vline( xintercept = -0.5)
 
+#### Now simulating with a continuous, rather than categoric, predictor
+set.seed(20) 
+sd <- 2 # Overall standard deviation
+eps <- rnorm(100, 0, sd) # Error term
+nutrients <- runif(100, 0, 100) # Variation of the predictor nutrients
+b0 <- 2 # Chlorophyll when nutrients are zero
+b1 <- 0.2 # How much each unit of nutrients increases chlorophyll by, the slope
 
+chlor <- b0 + b1*nutrients + eps # Generating chlorophyll values
+chlorophyll <- data.frame(chlor, nutrients) # Dataframe of prediction and predictor
+
+m2 <- lm(chlor~nutrients, data = chlorophyll) # Model these data
+summary(m2) # Model outputs for the intercept and nutrients are very good
+
+plot(chlor ~ nutrients, data = chlorophyll) # Plot the raw data
+abline(m2$coef[1], m2$coef[2], col = "red") # Plot the model line
+
+       
