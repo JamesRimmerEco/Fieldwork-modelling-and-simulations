@@ -36,7 +36,7 @@ library(ggplot2)
 library(purrr)
 # Create a function to run the model repeatedly
 
-fivegroupfactorfun <- function(nrep = 10, b0 = 6, b1 = -1.5, b2 = 0.5, b3 = 1, b4 = 0.3, sigma = 2){
+fivegroupfactorfun <- function(nrep = 10, b0 = 6, b1 = -1.5, b2 = -0.5, b3 = 1, b4 = 0.3, sigma = 2){
   ngroup = 5
   group = rep(c("group1", "group2", "group3", "group4", "group5"), each = nrep)
   eps = rnorm(ngroup*nrep, 0, sigma)
@@ -46,21 +46,39 @@ fivegroupfactorfun <- function(nrep = 10, b0 = 6, b1 = -1.5, b2 = 0.5, b3 = 1, b
   chlormod
 }
 
+set.seed(20)
 simulations <- replicate(1e3, fivegroupfactorfun(), simplify = F)
 
 # How often do we recover the SD?
 
-sims %>% # The simulations
+simulations %>% # The simulations
   map_dbl(~summary(.x)$sigma) %>% 
   data.frame(sigma=.) %>% 
   ggplot( aes(sigma) ) +
   geom_density(fill = "blue", alpha = .5) + 
   geom_vline( xintercept = 2)
 
-sims %>%
+simulations %>%
   map_dbl(~summary(.x)$sigma) %>%
   {. < 2} %>%
   mean() # Tell us how often the SD is underestimated
 
+# And the intercept parameter
+
+simulations %>% # The simulations
+  map_df(tidy) %>% # Turns each sim object into a tibble
+  filter(term == "(Intercept)") %>% # Filtering for Intercept 
+  ggplot( aes(estimate) ) +
+  geom_density(fill = "blue", alpha = .5) + # Density plot for the estimates for group 2
+  geom_vline( xintercept = 6)
+
+# And one of the other groups
+
+simulations %>% # The simulations
+  map_df(tidy) %>% # Turns each sim object into a tibble
+  filter(term == "groupgroup3") %>% # Filtering for group2 
+  ggplot( aes(estimate) ) +
+  geom_density(fill = "blue", alpha = .5) + # Density plot for the estimates for group 2
+  geom_vline( xintercept = -0.5)
 
 
