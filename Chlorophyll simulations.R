@@ -158,3 +158,44 @@ abline(m3$coef[1], m3$coef[2], col = "black")
 abline(m3$coef[1]+m3$coef[3], m3$coef[2], col = "red")
 
 coef(m3)
+
+
+                    ############################################
+                    ####        Multilevel simulation       ####
+                    ############################################
+
+# Start using an example for trees and plots https://aosmith.rbind.io/2018/04/23/simulate-simulate-part-2/
+# There are trees within plots, and plots within stands (4 plots per stand). We're not measuring 
+# individual trees
+
+set.seed(16)
+
+nstand = 5 # Number of stands
+nplot = 4 # Number of plots per stand
+mu = 10 # True mean
+sds = 2 # Standard deviation at the level of the stand
+sd = 1 # Standard deviation at the observation level
+
+(stand = rep(LETTERS[1:nstand], each = nplot)) # Create a variable containing a unique name for each of 
+# sampled stands (capital letters); each is repeated four time (nplot) because there were four plots in 
+# each stand
+
+(plot = letters[1:(nstand*nplot)]) # Creating a variable of unique names for each plot; this isn't 
+# strictly necessary for the modelling as there is a single value per plot, but it's good practice
+
+(standeff = rnorm(nstand, 0, sds)) # Stand-level random effects; one per stand. Each plot within the stand
+# has the same stand effect (i.e. the corresponding one of the 5 values). So stand therefore has a 
+# response variable which is either higher or lower than the others according to the value of this random
+# effect, and this needs to be encapsulated for each plot
+
+
+
+
+
+
+
+
+
+
+
+
