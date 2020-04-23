@@ -176,26 +176,118 @@ mu = 10 # True mean
 sds = 2 # Standard deviation at the level of the stand
 sd = 1 # Standard deviation at the observation level
 
-(stand = rep(LETTERS[1:nstand], each = nplot)) # Create a variable containing a unique name for each of 
+stand <- rep(LETTERS[1:nstand], each = nplot) # Create a variable containing a unique name for each of 
 # sampled stands (capital letters); each is repeated four time (nplot) because there were four plots in 
 # each stand
 
-(plot = letters[1:(nstand*nplot)]) # Creating a variable of unique names for each plot; this isn't 
+plot <- letters[1:(nstand*nplot)] # Creating a variable of unique names for each plot; this isn't 
 # strictly necessary for the modelling as there is a single value per plot, but it's good practice
 
-(standeff = rnorm(nstand, 0, sds)) # Stand-level random effects; one per stand. Each plot within the stand
+standeff <- rnorm(nstand, 0, sds) # Stand-level random effects; one per stand. Each plot within the stand
 # has the same stand effect (i.e. the corresponding one of the 5 values). So stand therefore has a 
 # response variable which is either higher or lower than the others according to the value of this random
 # effect, and this needs to be encapsulated for each plot
 
+standeff <- rep(standeff, each = nplot) # The stand effect needs to be repeated four each plot within
+# each stand
+
+ploteff <- rnorm(nstand*nplot, 0, sd) # Each unique plot measurement has its own observation-level random
+# effect, which is drawn in this case from a normal distribution. 20 draws are needed here, one for each
+# plot, so 20 random observation effects
+
+dat <- data.frame(stand, standeff, plot, ploteff) # Pull all the variables into a single dataframe; helps
+# illustrate the individual stand effects, and the individual plot effects
+
+# We now have a dataframe with effects at two levels - the plot level and the stand level (remember,
+# plot > stand, with plot being an observation).
+
+# We now need to combine this to create a simulated response variable. Let's call this resp and add it
+# to the dataframe
+
+dat$resp <- with(dat, mu + standeff + ploteff)
+
+# Now we have 20 responses 
+
+### Fitting the model
+
+library(lme4)
+
+mm1 <- lmer(resp ~ 1 + (1|stand), data = dat)
+summary(mm1)
+
+# So this model is estimating an overall mean (because there are no predictor parameters per se), and the 
+# random effects. Are they close to what we defined them as?
+# True mean is pretty close, as are the standard deviation of the stand effect (st dev random effect), and
+# the standard deviation of the residuals (1), which represents the observational standard deviation.
+
+# Remember, one can change these parameter values to check that the model recapatures them effectively. 
 
 
+#### Now testing a simulation over the longer term, to see how the model behaves
+# I've increased the number of stands and plots because lme4 was having difficulty fitting the model
+# in some cases
 
+multilevel_fun = function(nstand = 10, nplot = 5, mu = 10, sigma_s = 2, sigma = 1) {
+  standeff = rep( rnorm(nstand, 0, sigma_s), each = nplot)
+  stand = rep(LETTERS[1:nstand], each = nplot)
+  ploteff = rnorm(nstand*nplot, 0, sigma)
+  resp = mu + standeff + ploteff
+  dat = data.frame(stand, resp)
+  lmer(resp ~ 1 + (1|stand), data = dat)
+}
 
+simulations <- replicate(100, multilevel_fun(), simplify = F)
 
+# Now to extract parameters of interest
+library(broom)
+tidy(mm1, effects = "fixed")
+tidy(mm1, effects = "ran_pars", scales = "vcov")
 
+#####         Now let's see how well we can estimate variance according to sample size       ######
+# We're going to compare 5, 20 and 100 stands. The packages help with data manipulation and plotting
 
+library(purrr)
+library(dplyr)
+library(ggplot2)
 
+stand_sims = c(5, 20, 100) %>%
+  set_names() %>%
+  map(~replicate(1000, multilevel_fun(nstand = .x) ) ) # We're looping through a vector of the 3 stand sizes
+# and fitting a model 1000 times to each sample size. There will be some warning messages, e.g. about singular 
+# fit, and the process will take a while. In reality, would need to address this
+
+# We're now going to extract the variance of the stand effect for each model using tidy
+stand_vars = stand_sims %>%
+  modify_depth(2, ~tidy(.x, effects = "ran_pars", scales = "vcov") ) %>%
+  map_dfr(bind_rows, .id = "stand_num") %>%
+  filter(group == "stand")
+head(stand_vars)
+
+# Let's order the factor levels correctly
+stand_vars = mutate(stand_vars, stand_num = forcats::fct_inorder(stand_num) )
+
+# And some clearer labels
+add_prefix = function(string) {
+  paste("Number stands:", string, sep = " ")
+}
+# Add the median of each distribution as a second vertical line 
+groupmed = stand_vars %>%
+  group_by(stand_num) %>%
+  summarise(mvar = median(estimate) )
+
+ggplot(stand_vars, aes(x = estimate) ) + 
+  geom_density(fill = "blue", alpha = .25) +
+  facet_wrap(~stand_num, labeller = as_labeller(add_prefix) ) +
+  geom_vline(aes(xintercept = 4, linetype = "True variance"), size = .5 ) +
+  geom_vline(data = groupmed, aes(xintercept = mvar, linetype = "Median variance"),
+             size = .5) +
+  theme_bw() +
+  scale_linetype_manual(name = "", values = c(2, 1) ) +
+  theme(legend.position = "bottom",
+        legend.key.width = unit(.1, "cm") ) +
+  labs(x = "Estimated Variance", y = NULL)
+
+# We can see quite clearly with 5 stand that there is a lot more uncertainty about the true variance. 
 
 
 
