@@ -290,4 +290,52 @@ ggplot(stand_vars, aes(x = estimate) ) +
 # We can see quite clearly with 5 stand that there is a lot more uncertainty about the true variance. 
 
 
+            #############################################################################
+            ####        Now a mixed model with both fixed and random effects         ####
+            #############################################################################
+
+# We can have variables which are measured at either level of the model. Stand level measurements are
+# shared for all plots at that stand; plot level variables could be different for every plot
+
+set.seed(16)
+nstand <- 5 # Number of stand (2nd level)
+nplot <- 4 # Number of plots (1st level)
+b0 <- -1 # Mean response when the elevation and slope variables are 0
+b1 <- 0.005 # Change in mean response for a 1 unit change in the variable elevation
+b2 <- 0.1 # Change in mean response for a 1 unit change in the variable slope
+sds <- 2 # Stand standard deviation
+sd <- 1 # Standard deviation of observations
+
+stand <- rep(LETTERS[1:nstand], each = nplot) # Stand names
+standeff <- rep(rnorm(nstand, 0, sds), each = nplot) # Plot names
+ploteff <- rnorm(nstand*nplot, 0, sd) # Random observation effects
+
+elevation <- rep(runif(nstand, 1000, 1500), each = nplot) # Values for elevation; 1 per stand so 5 values
+# (5 stands), repeated for each of the 4 plots
+
+slope <- runif(nstand*nplot, 2, 75) # The slope variables are unique to each plot
+
+resp2 <- b0 + b1*elevation + b2*slope + standeff + ploteff # Calculate the 20 responses (5 stand x 
+# 4 plots per stand)
+
+# Now we can fit a mixed model for the response in which elevation and slope are fixed effects and 
+# stand is a random effect. 
+
+
+dat <- data.frame(resp2, stand, standeff, plot, ploteff, elevation, slope)
+dat
+dat2 <- data.frame(resp2, stand, elevation, slope) # Just to clarify that you don't need the random effect
+# variations in the dataframe itself
+
+mm2 <- lmer(resp2 ~ elevation + slope + (1|stand), data = dat)
+mm3 <- lmer(resp2 ~ elevation + slope + (1|stand), data = dat2)
+
+
+
+
+
+
+
+
+
 
