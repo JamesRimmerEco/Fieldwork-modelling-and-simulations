@@ -136,10 +136,10 @@ set.seed(20)
 
 sd <- 2
 nstress <- 2
-nrep <- 45
+nrep <- 50
 
 eps <- rnorm(nrep, 0, sd)
-glyphosate <- rep( c("Yes", "No"), each = nrep)
+glyphosate <- rep( c("Yes", "No"), each = nrep/2)
 rETRmax <- rnorm(nrep, 5, 2)
 
 b0 <- 2
