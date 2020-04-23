@@ -102,8 +102,6 @@ abline(m2$coef[1], m2$coef[2], col = "red") # Plot the model line
                 ################################################################################
                 ####        Model with both a continuous and a categorical predictor        ####
                 ################################################################################
-
-
 set.seed(20)
 
 sd <- 2
@@ -112,19 +110,51 @@ nstress <- 2
 nrep <- 45
 
 eps <- rnorm(nrep, 0, sd)
-glyphosate <- rep( c("NoGlyphosate", "Glyphosate"), each = nrep)
+glyphosate <- rep( c("Yes", "No"), each = nrep)
 nutrients <- runif(nrep, 0, 100)
 
 b0 <- 2
 b1 <- 0.2
-b2 <- rnorm(nrep, -10, 2) # Could set as distribution?
+b2 <- rnorm(nrep, -10, 2) 
 
-chlor <- b0 + b1*nutrients + b2*(glyphosate == "Glyphosate") + eps 
+chlor <- b0 + b1*nutrients + b2*(glyphosate == "Yes") + eps 
 chlorophyll <- data.frame(chlor, nutrients, glyphosate) # Dataframe of prediction and predictor
 plot(chlorophyll)
 
 m3 <- lm(chlor ~ nutrients + glyphosate, data = chlorophyll)
 summary(m3)
 
+          ################################################################################
+          ####                            More realistic simulation                   ####
+          ################################################################################
 
-       
+# The nutrients above weren't particularly realistic in the same way height and weight measurements
+# might be (would you really get a uniform distribution of nutrients measurements in an experiment/
+# fielwork?)
+
+set.seed(20)
+
+sd <- 2
+nstress <- 2
+nrep <- 45
+
+eps <- rnorm(nrep, 0, sd)
+glyphosate <- rep( c("Yes", "No"), each = nrep)
+rETRmax <- rnorm(nrep, 5, 2)
+
+b0 <- 2
+b1 <- 1.2
+b2 <- rnorm(nrep, -10, 2) 
+
+chlor <- b0 + b1*rETRmax + b2*(glyphosate == "Yes") + eps 
+chlorophyll <- data.frame(chlor, rETRmax, glyphosate) # Dataframe of prediction and predictor
+plot(chlorophyll, col = chlorophyll$glyphosate)
+
+m3 <- lm(chlor ~ rETRmax + glyphosate, data = chlorophyll)
+summary(m3)
+
+plot(chlor ~ rETRmax, data = chlorophyll, col = chlorophyll$glyphosate)
+abline(m3$coef[1], m3$coef[2], col = "black")
+abline(m3$coef[1]+m3$coef[3], m3$coef[2], col = "red")
+
+coef(m3)
