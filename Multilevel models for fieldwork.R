@@ -44,7 +44,7 @@ summary(cmm1)
 
 
                     ######################################################
-                    #####       Fitting a categorical variable        ####
+                    ##   Fitting a categorical variable and covariate   ##
                     ######################################################
 
 set.seed(20)
@@ -86,5 +86,12 @@ summary(mm2)
 library(rstanarm)
 
 mm3 <- stan_lmer(resp ~ gly + nutrients + (1|patch), data = dat)
+summary(mm3)
 plot(mm3)
+
+#     So to summarise, this model has variation at 2 levels - the level of the patch, and the level of the
+# observation. The patch level variation was set to have a standard deviation of 2 - lme4 has estimated this 
+# to be 2.47, so not too bad given 5 patches. The residial standard deviation was set to 1.5, and the model
+# has returned 1.4, so not bad again. Not all the glyphosate levels have been recaptured very well, 
+# however - probably too few samples. 
 
