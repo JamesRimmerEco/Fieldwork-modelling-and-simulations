@@ -50,6 +50,7 @@ summary(cmm1)
 set.seed(20)
 npatch <- 5
 nexp <- 6
+
 b0 <- 3 # Mean when other variables at zero or level 1 factor (control)
 b1 <- -0.3 # Mean change in response for 1 unit change in nutrients
 b2 <- -0.05# Difference between control and level 1
@@ -57,22 +58,33 @@ b3 <- -0.1 # Difference between control and level 2
 b4 <- -0.25 # Difference between control and level 3
 b5 <- -2 # Difference between control and level 4
 
-gly <- rep(c("Control", "lvl1", "lvl2", "lvl3", "lvl4"),  nexp)
+gly <- rep(c("Control", "lvl1", "lvl2", "lvl3", "lvl4", "lvl5"),  npatch)
+nutrients <- rep(rnorm(npatch*nexp, 0, 1.8))
 
 sds <- 2
 sd <- 1.5
 
-patch <- rep(LETTERS[1:npatch], each = nexp) # Name the patches;  experiment within a patch share a name
+patch <- rep(as.factor(1:npatch), each = nexp) # Name the patches;  experiment within a patch share a name
 exp <- as.factor(1:(npatch*nexp)) # Names for each experiment (all unique)
 
-patcheff <- rep(rnorm(npatch, 0, sds), each = npatch) # Patch level variation
+patcheff <- rep(rnorm(npatch, 0, sds), each = nexp) # Patch level variation
 expeff <- rnorm(npatch*nexp, 0, sd) # Observation level variation
 
+data.frame(gly, patch, exp, patcheff, expeff) # Check that the patch variation matches up with the patches
+# This isn't to create a dataframe at this point, just to check the formulation is correct
 
+resp <- b0 + b1*nutrients + b2*(gly == "levl1") + b3*(gly == "lvl2") + b4*(gly == "lvl3") + b5*(gly == "lvl4") + patcheff + expeff
 
+dat <- data.frame(resp, gly, patch, exp, nutrients)
+head(dat)
+str(dat)
+dat
 
+mm2 <- lmer(resp ~ gly + nutrients + (1|patch), data = dat)
+summary(mm2)
 
+library(rstanarm)
 
-
-
+mm3 <- stan_lmer(resp ~ gly + nutrients + (1|patch), data = dat)
+plot(mm3)
 
