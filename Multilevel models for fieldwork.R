@@ -95,3 +95,41 @@ plot(mm3)
 # has returned 1.4, so not bad again. Not all the glyphosate levels have been recaptured very well, 
 # however - probably too few samples. 
 
+# The function below allows repeated running of the simulation
+
+mixedchlor_fun <- function(npatch = 5, nexp = 6, b0 = 3, b1 = -0.3, b2 = -0.05, b3 = -0.1, b4 = -0.25, b5 = -2, sds = 2, sd = 1.5){
+  gly <- rep(c("Control", "lvl1", "lvl2", "lvl3", "lvl4", "lvl5"),  npatch)
+  nutrients <- rep(rnorm(npatch*nexp, 0, 1.8))
+  patch <- rep(as.factor(1:npatch), each = nexp)
+  exp <- as.factor(1:(npatch*nexp)) 
+  patcheff <- rep(rnorm(npatch, 0, sds), each = nexp)
+  expeff <- rnorm(npatch*nexp, 0, sd)
+  resp <- b0 + b1*nutrients + b2*(gly == "levl1") + b3*(gly == "lvl2") + b4*(gly == "lvl3") + b5*(gly == "lvl4") + patcheff + expeff
+  mm2 <- lmer(resp ~ gly + nutrients + (1|patch))
+  mm2
+  }
+
+# Testing we get the same result as when the previous model was built outside the function
+set.seed(20)
+mixedchlor_fun()
+
+mixedsimulations <- replicate(1e3, mixedchlor_fun(), simplify = F)
+
+# Packages to help extract parameters
+library(broom)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+#####
+# How often is sigma recovered?
+mixedsimulations %>% # The simulations
+    map_dbl(~summary(.x)$sigma) %>% 
+    data.frame(sigma=.) %>% 
+    ggplot( aes(sigma) ) +
+    geom_density(fill = "blue", alpha = .5) + 
+    geom_vline( xintercept = 1.5)
+
+# To continue from here, go to line 68 of the chlorophyll simulations in the fieldwork repository
+
+
+
