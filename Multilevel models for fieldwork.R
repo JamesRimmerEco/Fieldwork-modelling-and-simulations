@@ -59,7 +59,7 @@ b4 <- -0.25 # Difference between control and level 3
 b5 <- -2 # Difference between control and level 4
 
 gly <- rep(c("Control", "lvl1", "lvl2", "lvl3", "lvl4", "lvl5"),  npatch)
-nutrients <- rep(rnorm(npatch*nexp, 0, 1.8))
+nutrients <- rep(rnorm(npatch*nexp, 10, 1.8))
 
 sds <- 2
 sd <- 1.5
@@ -129,7 +129,42 @@ mixedsimulations %>% # The simulations
     geom_density(fill = "blue", alpha = .5) + 
     geom_vline( xintercept = 1.5)
 
-# To continue from here, go to line 68 of the chlorophyll simulations in the fieldwork repository
+# Recovering treatment level 1 parameter
+mixedsimulations 
+  map_df(tidy) 
+  filter(term == "glylvl1") %>%
+  ggplot( aes(estimate) ) +
+  geom_density(fill = "blue", alpha = .5) + 
+  geom_vline( xintercept = -0.05)
 
+# Recovering intercept parameter
+mixedsimulations %>% # The simulations
+  map_df(tidy) %>% # Turns each sim object into a tibble
+  filter(term == "(Intercept)") %>% # Filtering for group2 
+  ggplot( aes(estimate) ) +
+  geom_density(fill = "blue", alpha = .5) + # Density plot for the estimates for group 2
+  geom_vline( xintercept = 3)
 
+# Recovering nutrients parameter
+mixedsimulations %>% # The simulations
+  map_df(tidy) %>% # Turns each sim object into a tibble
+  filter(term == "nutrients") %>% # Filtering for group2 
+  ggplot( aes(estimate) ) +
+  geom_density(fill = "blue", alpha = .5) + # Density plot for the estimates for group 2
+  geom_vline( xintercept = -0.3)
 
+# Recovering the patch level standard deviation
+mixedsimulations %>% # The simulations
+  map_df(tidy) %>% # Turns each sim object into a tibble
+  filter(term == "sd_(Intercept).patch") %>% # Filtering for group2 
+  ggplot( aes(estimate) ) +
+  geom_density(fill = "blue", alpha = .5) + # Density plot for the estimates for group 2
+  geom_vline( xintercept = 2)
+
+# Recovering the observation level standard deviation
+mixedsimulations %>% # The simulations
+  map_df(tidy) %>% # Turns each sim object into a tibble
+  filter(term == "sd_Observation.Residual") %>% # Filtering for group2 
+  ggplot( aes(estimate) ) +
+  geom_density(fill = "blue", alpha = .5) + # Density plot for the estimates for group 2
+  geom_vline( xintercept = 1.5)
