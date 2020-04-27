@@ -245,5 +245,5 @@ resp <- b0 + ba1*(stress1 == "s1lvl1") + ba2*(stress1 == "s1lvl2") + bb1*(stress
 
 df <- data.frame(resp, df)
 
-mm2 <- lmer(resp ~ stress1 + stress2 + (1|patch) + (1|obs), data = df)
+mm2 <- lmer(resp ~ stress1 + stress2 + time + (1|patch) + (1|obs), data = df)
 summary(mm2)
