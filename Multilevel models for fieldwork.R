@@ -168,3 +168,80 @@ mixedsimulations %>% # The simulations
   ggplot( aes(estimate) ) +
   geom_density(fill = "blue", alpha = .5) + # Density plot for the estimates for group 2
   geom_vline( xintercept = 1.5)
+
+              ###########################################################
+              #### Realistic data - intercepts only, no interactions ####
+              ###########################################################
+
+# In this dataframe, there are a series of measurements (weekly measurements) and responses; the response
+# variables will be affected by each of the predictors, but not all predictors necessarily have much
+# of an effect (consider AIC comparison with these). We want to account for:
+# a) Multiple patches
+# b) Repeated measurements
+
+# The model structure should look something like this:
+# resp ~ stress 1 + stress 2 + week + (1|ID) + (1|Patch)
+
+# More sophisticated models and simulations can include random slopes and interactions, but we haven't 
+# got that far yet. 
+
+set.seed(20)
+
+npatch <- 5 # Number of patches at the estuary
+reppatch <- 2 # How many times the entire experiment is replicated per patch
+nwks <- 5 # The number of time points at which the experiment is measured
+nlvl1 <- 3 # Factor levels, including control, for stressor 1
+nlvl2 <- 2 # Factor levels, including control, for stressor 2
+
+# The below numbers can be tweaked; for now, they are made up but will be made to match mesocosm 
+# experiments
+
+b0 <- 10 # Mean response when other variables zero or at level 1 factor
+ba1 <- -0.005 # Difference between intercept and stress 1 lvl 1
+ba2 <- -0.9 # Difference between intercept and stress 1 lvl 2
+bb1 <- -1.2 # Difference between intercept and stress 2 lvl 1
+bt <- 0 # The effect of temperature on the response (zero means no effect)
+bp <- 0 # The effect of precipitation on the response
+bt1 <- 0.2 # Difference between time 1 (intercept) and time 2 
+bt2 <- -0.1 # Difference between time 1 and time 3
+bt3 <- -0.2 # Difference between time 1 and time 4
+bt4 <- 0.5 # Difference between time 1 and time 5
+
+stress1 <- rep(rep(rep(c("s1Control", "s1lvl1", "s1lvl2"),  (nlvl1*nlvl2)/nlvl1), npatch*reppatch), nwks)
+# Looks convuluted, but the structure allows for the number of levels in the respective treatments to be 
+# altered more easily.Stress 1 is repeated in batches to line up with each combination of stress 2
+
+stress2 <- rep(rep(rep(c("s2Control", "s2lvl1"), each = (nlvl1*nlvl2)/nlvl2), npatch*reppatch), nwks)
+
+time <- rep(rep(as.factor(1:nwks)), each = nlvl1*nlvl2*npatch*reppatch) # Assigns a time stamp for each week, repeated for 
+# each time set of experiments once per observation per patch. 
+length(time)
+
+df <- data.frame(stress1, stress2, time) # Checks that there are the correct number of combinations - for the 
+# default setting, this is a design with one factor at 2 levels, 1 at 3,  each repeated twice per patch, 
+# measured 5 times. Therefore, 60 observations per system per week (for each response variable). 
+head(df, n = 18)
+sdp <- 2 # Patch level standard deviation
+sd <- 1.5 # Observation level standard deviation
+
+patch <- rep(rep(as.factor(1:npatch), each = nlvl1*nlvl2*reppatch), nwks) # Each patch has 2 runs of the 
+# experiment, i.e. 12 per patch. Each patch is then repeated across time (5 weeks). 
+df <- data.frame(stress1, stress2, time, patch)
+
+exp <- as.factor(1:(npatch*reppatch*lvl1*nlvl2*nwks)) # Names for each experiment (all unique)
+
+patcheff <- rep(rep(rnorm(npatch, 0, sdp), each = nlvl1*nlvl2*reppatch), nwks) # Patch level variation, 
+# which is consistent in time 
+
+expeff <- rep(rnorm(npatch*nlvl1*nlvl2*reppatch, 0, sd),  nwks) # Observation level variation; these are
+# consistent in time (and this helps understand why you fit replicate identity as a random effect, not
+# time itself)
+
+df <- data.frame(stress1, stress2, time, patch, patcheff, expeff)
+
+
+
+
+
+
+
