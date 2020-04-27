@@ -184,7 +184,7 @@ mixedsimulations %>% # The simulations
 
 # More sophisticated models and simulations can include random slopes and interactions, but we haven't 
 # got that far yet. 
-
+library(lme4)
 set.seed(20)
 
 npatch <- 5 # Number of patches at the estuary
@@ -200,8 +200,8 @@ b0 <- 10 # Mean response when other variables zero or at level 1 factor
 ba1 <- -0.005 # Difference between intercept and stress 1 lvl 1
 ba2 <- -0.9 # Difference between intercept and stress 1 lvl 2
 bb1 <- -1.2 # Difference between intercept and stress 2 lvl 1
-bt <- 0 # The effect of temperature on the response (zero means no effect)
-bp <- 0 # The effect of precipitation on the response
+bt <- 0 # The effect of temperature on the response (zero means no effect) - this will be used later
+bp <- 0 # The effect of precipitation on the response - this will be used later
 bt1 <- 0.2 # Difference between time 1 (intercept) and time 2 
 bt2 <- -0.1 # Difference between time 1 and time 3
 bt3 <- -0.2 # Difference between time 1 and time 4
@@ -228,7 +228,7 @@ patch <- rep(rep(as.factor(1:npatch), each = nlvl1*nlvl2*reppatch), nwks) # Each
 # experiment, i.e. 12 per patch. Each patch is then repeated across time (5 weeks). 
 df <- data.frame(stress1, stress2, time, patch)
 
-exp <- as.factor(1:(npatch*reppatch*lvl1*nlvl2*nwks)) # Names for each experiment (all unique)
+obs <- rep(as.factor(1:(npatch*reppatch*lvl1*nlvl2)), nwks) # Names for each experiment (all unique)
 
 patcheff <- rep(rep(rnorm(npatch, 0, sdp), each = nlvl1*nlvl2*reppatch), nwks) # Patch level variation, 
 # which is consistent in time 
@@ -237,11 +237,13 @@ expeff <- rep(rnorm(npatch*nlvl1*nlvl2*reppatch, 0, sd),  nwks) # Observation le
 # consistent in time (and this helps understand why you fit replicate identity as a random effect, not
 # time itself)
 
-df <- data.frame(stress1, stress2, time, patch, patcheff, expeff)
+df <- data.frame(stress1, stress2, time, patch, obs, patcheff, expeff)
 
+resp <- b0 + ba1*(stress1 == "s1lvl1") + ba2*(stress1 == "s1lvl2") + bb1*(stress2 == "s2lvl1") +
+  bb2*(stress2 == "s2lvl2") + bt1*(time == "2") + bt2*(time == "3") + bt3*(time == "4") +
+  bt4*(time == "5") + patcheff + expeff
 
+df <- data.frame(resp, df)
 
-
-
-
-
+mm2 <- lmer(resp ~ stress1 + stress2 + (1|patch) + (1|obs), data = df)
+summary(mm2)
