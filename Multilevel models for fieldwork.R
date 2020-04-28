@@ -197,15 +197,16 @@ nlvl2 <- 2 # Factor levels, including control, for stressor 2
 # experiments
 
 b0 <- 10 # Mean response when other variables zero or at level 1 factor
-ba1 <- -0.005 # Difference between intercept and stress 1 lvl 1
+ba1 <- -0.05 # Difference between intercept and stress 1 lvl 1
 ba2 <- -0.9 # Difference between intercept and stress 1 lvl 2
 bb1 <- -1.2 # Difference between intercept and stress 2 lvl 1
 bt <- 0 # The effect of temperature on the response (zero means no effect) - this will be used later
 bp <- 0 # The effect of precipitation on the response - this will be used later
-bt1 <- 0.2 # Difference between time 1 (intercept) and time 2 
+bt1 <- 0.2 # Difference between time 1 (intercept) and each change in time
 bt2 <- -0.1 # Difference between time 1 and time 3
 bt3 <- -0.2 # Difference between time 1 and time 4
 bt4 <- 0.5 # Difference between time 1 and time 5
+btime <- 0.2 # For a continuous change in time
 
 stress1 <- rep(rep(rep(c("s1Control", "s1lvl1", "s1lvl2"),  (nlvl1*nlvl2)/nlvl1), npatch*reppatch), nwks)
 # Looks convuluted, but the structure allows for the number of levels in the respective treatments to be 
@@ -246,8 +247,8 @@ resp <- b0 + ba1*(stress1 == "s1lvl1") + ba2*(stress1 == "s1lvl2") + bb1*(stress
 df <- data.frame(resp, df)
 str(df)
 
-mm2 <- lmer(resp ~ stress1 + stress2 + time + (1|patch) + (1|obs), data = df)
-summary(mm2)
+#mm2 <- lmer(resp ~ stress1 + stress2 + time + (1|patch) + (1|obs), data = df)
+#summary(mm2)
 
 ###### This model appears to struggle because there are so many combinations of effects, it becomes
 # overwhelming. Instead, we could try treating time as a covariate. We will take the same dataframe but
@@ -255,11 +256,36 @@ summary(mm2)
 
 time2 <- rep(rep(as.numeric(1:nwks)), each = nlvl1*nlvl2*npatch*reppatch)
 df <- data.frame(df, time2)
-
+head(df)
 resp2 <- b0 + ba1*(stress1 == "s1lvl1") + ba2*(stress1 == "s1lvl2") + bb1*(stress2 == "s2lvl1") + 
-  patcheff + expeff
+  btime*time2 + patcheff + expeff
 
-mm4 <- lmer(resp ~ stress1 + stress2 + time2 + (1|patch) + (1|obs), data = df)
+df<-data.frame(df, resp2)
+str(df)
+
+mm4 <- lmer(resp2 ~ stress1 + stress2 + time2 + (1|patch) + (1|obs), data = df)
 summary(mm4)
 
-# This appears to have worked. 
+# This isn't currently working
+
+
+
+
+      ##########################################
+      ##    Now doing long-run simulations    ##
+      ###########################################
+
+temporalfield_fun <- function(npatch = 5, reppatch  = 2, nwks = 5, nlvl1 = 3, nlvl2 = 2, b0 = 10, ba1 = -0.05, ba2 = -0.9, bb1 = -1.2, , sds = 2, sd = 1.5){
+  gly <- rep(c("Control", "lvl1", "lvl2", "lvl3", "lvl4", "lvl5"),  npatch)
+  nutrients <- rep(rnorm(npatch*nexp, 0, 1.8))
+  patch <- rep(as.factor(1:npatch), each = nexp)
+  exp <- as.factor(1:(npatch*nexp)) 
+  patcheff <- rep(rnorm(npatch, 0, sds), each = nexp)
+  expeff <- rnorm(npatch*nexp, 0, sd)
+  resp <- b0 + b1*nutrients + b2*(gly == "levl1") + b3*(gly == "lvl2") + b4*(gly == "lvl3") + b5*(gly == "lvl4") + patcheff + expeff
+  mm2 <- lmer(resp ~ gly + nutrients + (1|patch))
+  mm2
+}
+
+
+
