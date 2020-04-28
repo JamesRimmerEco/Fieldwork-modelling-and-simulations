@@ -228,7 +228,7 @@ patch <- rep(rep(as.factor(1:npatch), each = nlvl1*nlvl2*reppatch), nwks) # Each
 # experiment, i.e. 12 per patch. Each patch is then repeated across time (5 weeks). 
 df <- data.frame(stress1, stress2, time, patch)
 
-obs <- rep(as.factor(1:(npatch*reppatch*lvl1*nlvl2)), nwks) # Names for each experiment (all unique)
+obs <- rep(as.factor(1:(npatch*reppatch*nlvl1*nlvl2)), nwks) # Names for each experiment (all unique)
 
 patcheff <- rep(rep(rnorm(npatch, 0, sdp), each = nlvl1*nlvl2*reppatch), nwks) # Patch level variation, 
 # which is consistent in time 
@@ -240,10 +240,26 @@ expeff <- rep(rnorm(npatch*nlvl1*nlvl2*reppatch, 0, sd),  nwks) # Observation le
 df <- data.frame(stress1, stress2, time, patch, obs, patcheff, expeff)
 
 resp <- b0 + ba1*(stress1 == "s1lvl1") + ba2*(stress1 == "s1lvl2") + bb1*(stress2 == "s2lvl1") +
-  bb2*(stress2 == "s2lvl2") + bt1*(time == "2") + bt2*(time == "3") + bt3*(time == "4") +
+  bt1*(time == "2") + bt2*(time == "3") + bt3*(time == "4") +
   bt4*(time == "5") + patcheff + expeff
 
 df <- data.frame(resp, df)
+str(df)
 
 mm2 <- lmer(resp ~ stress1 + stress2 + time + (1|patch) + (1|obs), data = df)
 summary(mm2)
+
+###### This model appears to struggle because there are so many combinations of effects, it becomes
+# overwhelming. Instead, we could try treating time as a covariate. We will take the same dataframe but
+# include a replaced time construct.
+
+time2 <- rep(rep(as.numeric(1:nwks)), each = nlvl1*nlvl2*npatch*reppatch)
+df <- data.frame(df, time2)
+
+resp2 <- b0 + ba1*(stress1 == "s1lvl1") + ba2*(stress1 == "s1lvl2") + bb1*(stress2 == "s2lvl1") + 
+  patcheff + expeff
+
+mm4 <- lmer(resp ~ stress1 + stress2 + time2 + (1|patch) + (1|obs), data = df)
+summary(mm4)
+
+# This appears to have worked. 
