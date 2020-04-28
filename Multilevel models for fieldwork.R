@@ -6,7 +6,7 @@ library(lme4)
 # conduct measurements of chlorophyll, nutrients and grazer biomass
 # Nutrients are measured at the level of the patch only, grazer biomass at the level of the experimental
 # plot
-          
+
 set.seed(20) # Set a reproducible seed
 npatch <- 5 # The number of patches within the estuary
 nexp <- 10 # The number of experimental units per patch
