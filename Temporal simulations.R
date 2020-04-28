@@ -2,7 +2,8 @@ rm(list = ls())
 
 ####                          First, very simple linear models
 
-set.seed(20)
+set.seed(20) # Something to note here - through chance, the first stated mixed model fit without issue, but
+# other seeds run into singular fit problems. 
 
 b0 <- 50 # Response intercept
 b1 <- 5
@@ -57,3 +58,46 @@ library(broom)
 library(dplyr)
 library(ggplot2)
 library(purrr)
+# Function to repeatedly run the simulation:
+stresstempo_fun <- function(nexp = 45, ntime = 5, b0 = 50, b1 = 5, bt = 1.5){
+  stress <- rnorm(nexp, 0, 3)
+  time <- rep((1:ntime), each = nexp/ntime)
+  sd <- 2
+  obs <- rep(as.factor(1:(nexp/ntime)), ntime)
+  obseff <- rnorm(nexp, 0, sd)
+  df <- data.frame(stress, time, obs, obseff)
+  df
+  resp <- b0 + b1*stress + bt*time + obseff
+  df <- data.frame(df, resp)
+  df
+  m1 <- lm(resp ~ stress + time, data = df)
+  m1
+}
+
+sims <- replicate(1e3, stresstempo_fun(), simplify = F)
+
+# Recover standard deviation
+sims %>% 
+  map_dbl(~summary(.x)$sigma) %>% 
+  data.frame(sigma=.) %>% 
+  ggplot( aes(sigma) ) +
+  geom_density(fill = "blue", alpha = .5) + 
+  geom_vline( xintercept = 2)
+
+# Recover stress
+sims %>%
+  map_df(tidy) %>%
+  filter(term == "stress") %>%
+  ggplot( aes(estimate) ) +
+  geom_density(fill = "blue", alpha = .5) + 
+  geom_vline( xintercept = 5)
+
+# Recover time
+sims %>%
+  map_df(tidy) %>%
+  filter(term == "time") %>%
+  ggplot( aes(estimate) ) +
+  geom_density(fill = "blue", alpha = .5) + 
+  geom_vline( xintercept = 1.5)
+
+
